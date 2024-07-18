@@ -1,4 +1,4 @@
-from flask import Flask, request, send_file
+from flask import Flask, request, send_file, jsonify
 import yt_dlp
 import os
 
@@ -24,17 +24,27 @@ def download_video(url, output_path):
 def download_song(video_id):
     url = f"https://www.youtube.com/watch?v={video_id}"
     output_path = f"downloads/{video_id}.%(ext)s"
-    download_audio(url, output_path)
-    return send_file(output_path, as_attachment=True)
+    try:
+        download_audio(url, output_path)
+        return send_file(output_path, as_attachment=True)
+    except yt_dlp.utils.DownloadError as e:
+        return jsonify({'error': 'DownloadError', 'message': str(e)}), 404
+    except Exception as e:
+        return jsonify({'error': 'UnexpectedError', 'message': str(e)}), 500
 
 @app.route('/download/video/<path:video_id>', methods=['GET'])
 def download_video_route(video_id):
     url = f"https://www.youtube.com/watch?v={video_id}"
     output_path = f"downloads/{video_id}.mp4"
-    download_video(url, output_path)
-    return send_file(output_path, as_attachment=True)
+    try:
+        download_video(url, output_path)
+        return send_file(output_path, as_attachment=True)
+    except yt_dlp.utils.DownloadError as e:
+        return jsonify({'error': 'DownloadError', 'message': str(e)}), 404
+    except Exception as e:
+        return jsonify({'error': 'UnexpectedError', 'message': str(e)}), 500
 
 if __name__ == '__main__':
     if not os.path.exists('downloads'):
         os.makedirs('downloads')
-    app.run(host='0.0.0.0', port=8080, debug=True)
+    app.run(host='0.0.0.0', port=80, debug=True)
