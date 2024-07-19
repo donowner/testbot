@@ -61,14 +61,14 @@ def download_song(video_id):
         download_audio(url, output_path)
         output_file = f"audio/{video_id}.mp3"
 
-        @after_this_request
+       """ @after_this_request
         def remove_file(response):
             try:
                 if os.path.exists(output_file):
                     os.remove(output_file)
             except Exception as e:
                 app.logger.error(f"Error deleting file {output_file}: {e}")
-            return response
+            return response """
 
         return send_file(output_file, as_attachment=True, attachment_filename=f"{video_id}.mp3")
     except yt_dlp.utils.DownloadError as e:
