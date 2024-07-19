@@ -4,7 +4,6 @@ import yt_dlp
 
 app = Flask(__name__)
 
-# Function to ensure the directory exists
 def ensure_directory_exists(directory):
     if not os.path.exists(directory):
         os.makedirs(directory)
@@ -53,24 +52,35 @@ def download_video(url, output_path, quality):
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
         ydl.download([url])
 
+def find_file_with_extension(directory, base_filename, extensions):
+    for ext in extensions:
+        file_path = os.path.join(directory, f"{base_filename}.{ext}")
+        if os.path.exists(file_path):
+            return file_path
+    return None
+
 @app.route('/download/song/<path:video_id>', methods=['GET'])
 def download_song(video_id):
     url = f"https://www.youtube.com/watch?v={video_id}"
     output_path = f"audio/{video_id}.%(ext)s"
     try:
         download_audio(url, output_path)
-        output_file = f"audio/{video_id}.mp3"
+        # Look for the file with possible extensions
+        output_file = find_file_with_extension('audio', video_id, ['mp3', 'm4a', 'webm'])
+        
+        if not output_file:
+            return jsonify({'error': 'FileNotFoundError', 'message': f"No audio file found for video ID {video_id}"}), 404
 
-       """ @after_this_request
+        @after_this_request
         def remove_file(response):
             try:
                 if os.path.exists(output_file):
                     os.remove(output_file)
             except Exception as e:
                 app.logger.error(f"Error deleting file {output_file}: {e}")
-            return response """
+            return response
 
-        return send_file(output_file, as_attachment=True, attachment_filename=f"{video_id}.mp3")
+        return send_file(output_file, as_attachment=True, download_name=f"{video_id}.mp3")
     except yt_dlp.utils.DownloadError as e:
         return jsonify({'error': 'DownloadError', 'message': str(e)}), 404
     except Exception as e:
@@ -83,7 +93,11 @@ def download_video_route(video_id):
     quality = request.args.get('quality', '480')
     try:
         download_video(url, output_path, quality)
-        output_file = f"video/{video_id}.mp4"
+        # Look for the file with possible extensions
+        output_file = find_file_with_extension('video', video_id, ['mp4', 'webm'])
+        
+        if not output_file:
+            return jsonify({'error': 'FileNotFoundError', 'message': f"No video file found for video ID {video_id}"}), 404
 
         @after_this_request
         def remove_file(response):
@@ -94,14 +108,13 @@ def download_video_route(video_id):
                 app.logger.error(f"Error deleting file {output_file}: {e}")
             return response
 
-        return send_file(output_file, as_attachment=True, attachment_filename=f"{video_id}.mp4")
+        return send_file(output_file, as_attachment=True, download_name=f"{video_id}.mp4")
     except yt_dlp.utils.DownloadError as e:
         return jsonify({'error': 'DownloadError', 'message': str(e)}), 404
     except Exception as e:
         return jsonify({'error': 'UnexpectedError', 'message': str(e)}), 500
 
 if __name__ == '__main__':
-    # Ensure the necessary directories exist
     ensure_directory_exists('audio')
     ensure_directory_exists('video')
     
