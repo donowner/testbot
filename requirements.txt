@@ -1,2 +1,4 @@
+pyrogram
+youtube-search-python
 Flask
 yt-dlp
