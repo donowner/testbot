@@ -12,7 +12,7 @@ from pyrogram.types import Message
 API_ID = 14254903
 API_HASH = '6215310c3d291816386475a3f17fe970'
 
-BOT_TOKEN = "7371246781:AAGIVGgXOBfGHamn74PUyoxUZDB7U3weqBc"
+BOT_TOKEN = "7505403312:AAH1ePb12fU5epQczzVlak2Y1uO9xUVRxkE"
 
 # Initialize the Pyrogram client
 app = Client("youtube_search_bot", api_id=API_ID, api_hash=API_HASH, bot_token=BOT_TOKEN)
